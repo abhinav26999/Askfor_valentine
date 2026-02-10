@@ -239,6 +239,13 @@ export default function Create() {
                     >
                         {memories.length > 0 ? "Finish & Preview ✨" : "Skip & Preview 👉"}
                     </button>
+
+                    <div className="max-w-2xl mx-auto px-6 pt-6 border-t border-white/5">
+                        <p className="text-sm text-slate-600 leading-relaxed">
+                            🔒 <strong>Privacy Notice:</strong> Don't worry! Your images are not permanently stored.
+                            A backend script automatically deletes them from our database after the link is generated to ensure your privacy.
+                        </p>
+                    </div>
                 </div>
             </div>
         );

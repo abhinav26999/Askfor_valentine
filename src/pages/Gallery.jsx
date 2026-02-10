@@ -99,6 +99,14 @@ export default function Gallery() {
                     </p>
                 </div>
             ))}
+
+            {/* --- PRIVACY FOOTER --- */}
+            <div className="fixed bottom-0 left-0 w-full text-center z-40 pointer-events-none p-4">
+                <p className="text-sm text-slate-400/80 bg-white/60 backdrop-blur-sm inline-block px-6 py-2 rounded-full shadow-sm border border-white/20">
+                    🔒 <strong>Privacy Notice:</strong> Don't worry! Your images are not permanently stored.
+                    A backend script automatically deletes them from our database after the link is generated to ensure your privacy.
+                </p>
+            </div>
         </div>
     );
 }

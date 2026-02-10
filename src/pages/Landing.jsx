@@ -259,6 +259,12 @@ export default function Landing() {
                         <HeartIcon className="w-6 h-6 text-rose-600" />
                     </div>
                     <p className="text-slate-500 text-sm">© 2026 AskForLove. Made with ❤️ for meaningful moments.</p>
+                    <div className="max-w-2xl mx-auto px-6 pt-6 border-t border-white/5">
+                        <p className="text-sm text-slate-600 leading-relaxed">
+                            🔒 <strong>Privacy Notice:</strong> Don't worry! Your images are not permanently stored.
+                            A backend script automatically deletes them from our database after the link is generated to ensure your privacy.
+                        </p>
+                    </div>
                 </footer>
 
             </div>
