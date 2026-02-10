@@ -10,45 +10,61 @@ export default function Gallery() {
 
     useEffect(() => {
         const fetchMemories = async () => {
-            const data = await getLovePage(id);
-            // Default to some placeholders if no images uploaded
-            if (data?.memories && data.memories.length > 0) {
-                // Map the simple URL array to object structure for the gallery layout
-                const formatted = data.memories.map((url, i) => ({
-                    id: i,
-                    src: url,
-                    caption: "Memory " + (i + 1),
-                    rot: `${Math.random() * 10 - 5}deg`, // Random rotation
-                    top: `${Math.random() * 40 + 10}%`,   // Random position
-                    left: `${Math.random() * 60 + 10}%`
-                }));
-                setMemories(formatted);
-            } else {
-                setMemories([]); // Or leave empty
+            try {
+                const data = await getLovePage(id);
+                // Check if the user uploaded images
+                if (data && data.memories && data.memories.length > 0) {
+                    const formatted = data.memories.map((url, i) => ({
+                        id: i,
+                        src: url,
+                        type: 'img',
+                        caption: `Memory ${i + 1}`,
+                        // Random rotation and position to simulate scattered photos
+                        rot: `${Math.random() * 20 - 10}deg`,
+                        top: `${Math.random() * 50 + 10}%`,
+                        left: `${Math.random() * 60 + 5}%`
+                    }));
+                    setMemories(formatted);
+                } else {
+                    // Fallback note if no images exist
+                    setMemories([
+                        {
+                            id: 99,
+                            type: 'note',
+                            text: "No photos found... but the love is real.",
+                            caption: "Note",
+                            rot: '5deg',
+                            top: '40%',
+                            left: '40%'
+                        }
+                    ]);
+                }
+            } catch (error) {
+                console.error("Error fetching gallery:", error);
             }
             setLoading(false);
         };
         fetchMemories();
     }, [id]);
 
-    if (loading) return <div className="min-h-screen bg-[#f3f0e9] flex items-center justify-center">Loading Memories...</div>;
-
-    if (memories.length === 0) {
-        return (
-            <div className="min-h-screen bg-[#f3f0e9] flex items-center justify-center text-center p-6">
-                <h1 className="text-3xl font-serif text-slate-400">No photos were uploaded... but the memories are in your heart. ❤️</h1>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="min-h-screen bg-[#f3f0e9] flex items-center justify-center font-serif text-slate-400">
+            <span className="animate-pulse">Opening Memory Box...</span>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-[#f3f0e9] overflow-hidden relative cursor-grab active:cursor-grabbing">
+
+            {/* Paper Texture Overlay */}
             <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/paper.png')]"></div>
 
-            <h1 className="absolute top-10 left-0 w-full text-center font-serif text-3xl md:text-5xl text-slate-800 opacity-30 z-0 tracking-widest font-black uppercase">
-                Memory Lane
+            {/* Header */}
+            <h1 className="absolute top-10 left-0 w-full text-center font-serif text-4xl text-slate-800 opacity-40 z-0 tracking-widest uppercase">
+                Our Memories
             </h1>
 
+            {/* Draggable/Hoverable Photos */}
             {memories.map((mem) => (
                 <div
                     key={mem.id}
@@ -62,15 +78,25 @@ export default function Gallery() {
                         top: mem.top,
                         left: mem.left,
                         transform: activeId === mem.id ? 'scale(1.1)' : `rotate(${mem.rot})`,
-                        width: '250px',
+                        width: '260px',
                     }}
                 >
-                    {/* TAPE EFFECT */}
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-24 h-8 bg-yellow-200/40 rotate-1 backdrop-blur-sm shadow-sm"></div>
+                    {/* Tape Effect */}
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-rose-200/50 rotate-1 backdrop-blur-sm shadow-sm"></div>
 
-                    <div className="w-full aspect-square overflow-hidden mb-4 bg-gray-100">
-                        <img src={mem.src} alt="" className="w-full h-full object-cover" />
-                    </div>
+                    {mem.type === 'img' ? (
+                        <div className="w-full aspect-square overflow-hidden mb-3 bg-gray-100">
+                            <img src={mem.src} alt="" className="w-full h-full object-cover" />
+                        </div>
+                    ) : (
+                        <div className="w-full aspect-square flex items-center justify-center p-4 bg-yellow-50 text-center font-serif text-xl italic text-slate-600">
+                            "{mem.text}"
+                        </div>
+                    )}
+
+                    <p className="font-mono text-center text-slate-400 text-xs font-bold uppercase tracking-widest">
+                        {mem.caption}
+                    </p>
                 </div>
             ))}
         </div>

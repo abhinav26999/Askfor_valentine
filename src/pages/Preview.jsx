@@ -10,51 +10,34 @@ const EditIcon = ({ className }) => (
     </svg>
 );
 
-const HeartIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-        <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
-    </svg>
-);
-
-const LockIcon = ({ className }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-    </svg>
-);
-
 const DRAFT_KEY = "love_draft_id";
 
-// --- FLOATING HEARTS COMPONENT ---
-const FloatingHearts = () => {
-    return (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(6)].map((_, i) => (
-                <div
-                    key={i}
-                    className="absolute text-rose-200 animate-float opacity-50"
-                    style={{
-                        left: `${Math.random() * 100}%`,
-                        top: `${Math.random() * 100}%`,
-                        animationDelay: `${Math.random() * 5}s`,
-                        fontSize: `${Math.random() * 20 + 20}px`
-                    }}
-                >
-                    ❤️
-                </div>
-            ))}
-            <style>{`
-        @keyframes float {
-          0% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(10deg); }
-          100% { transform: translateY(0px) rotate(0deg); }
-        }
-        .animate-float {
-          animation: float 6s infinite ease-in-out;
-        }
-      `}</style>
-        </div>
-    );
-};
+// --- FLOATING HEARTS BACKGROUND ---
+const FloatingHearts = () => (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+            <div
+                key={i}
+                className="absolute text-rose-200 animate-float opacity-50 select-none"
+                style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 5}s`,
+                    fontSize: `${Math.random() * 20 + 20}px`
+                }}
+            >
+                ❤️
+            </div>
+        ))}
+        <style>{`
+            @keyframes float {
+                0%, 100% { transform: translateY(0) rotate(0); }
+                50% { transform: translateY(-20px) rotate(10deg); }
+            }
+            .animate-float { animation: float 6s infinite ease-in-out; }
+        `}</style>
+    </div>
+);
 
 export default function Preview() {
     const { id } = useParams();
@@ -63,15 +46,24 @@ export default function Preview() {
     const [loading, setLoading] = useState(true);
     const [publishing, setPublishing] = useState(false);
 
-    // INLINE EDIT STATE
+    // UI States
     const [editingField, setEditingField] = useState(null);
     const [tempValue, setTempValue] = useState("");
     const [saving, setSaving] = useState(false);
+    const [activeTab, setActiveTab] = useState("direct"); // "direct" or "wait"
+    const [isPublished, setIsPublished] = useState(false); // Track if published to show link options
 
     useEffect(() => {
         const fetchData = async () => {
-            const doc = await getLovePage(id);
-            setData(doc);
+            try {
+                const doc = await getLovePage(id);
+                if (doc) {
+                    setData(doc);
+                    if (doc.status === 'published') setIsPublished(true);
+                }
+            } catch (error) {
+                console.error("Failed to load page", error);
+            }
             setLoading(false);
         };
         fetchData();
@@ -81,9 +73,17 @@ export default function Preview() {
         setPublishing(true);
         await publishLovePage(id);
         localStorage.removeItem(DRAFT_KEY);
-        setTimeout(() => {
-            navigate(`/love/${id}`);
-        }, 2000);
+        setPublishing(false);
+        setIsPublished(true);
+    };
+
+    const copyLink = (type) => {
+        const baseUrl = window.location.origin;
+        const path = type === 'wait' ? `/wait/${id}` : `/love/${id}`;
+        const url = `${baseUrl}${path}`;
+        navigator.clipboard.writeText(url).then(() => {
+            alert(type === 'wait' ? "Countdown Link Copied! ⏳ Send this if you want them to wait." : "Direct Link Copied! 💌 Send this to open now.");
+        });
     };
 
     const startEdit = (field, value) => {
@@ -91,24 +91,20 @@ export default function Preview() {
         setTempValue(value || "");
     };
 
-    const cancelEdit = () => {
-        setEditingField(null);
-        setTempValue("");
-    };
-
     const saveEdit = async (field) => {
         setSaving(true);
         await updateLovePage(id, { [field]: tempValue });
 
         setData(prev => {
+            const newData = { ...prev };
             const keys = field.split(".");
-            if (keys.length === 1) return { ...prev, [keys[0]]: tempValue };
-            if (keys.length === 2) return { ...prev, [keys[0]]: { ...prev[keys[0]], [keys[1]]: tempValue } };
-            return prev;
+            if (keys.length === 1) newData[keys[0]] = tempValue;
+            if (keys.length === 2) newData[keys[0]][keys[1]] = tempValue;
+            return newData;
         });
 
         setSaving(false);
-        cancelEdit();
+        setEditingField(null);
     };
 
     if (loading) return (
@@ -120,31 +116,13 @@ export default function Preview() {
 
     if (!data) return <div className="min-h-screen bg-pink-50 flex items-center justify-center text-slate-500">Story not found.</div>;
 
-    // --- PUBLISHING OVERLAY (Light Theme) ---
-    if (publishing) {
-        return (
-            <div className="fixed inset-0 z-[100] bg-white/90 backdrop-blur-md flex flex-col items-center justify-center text-center px-6">
-                <div className="relative z-10">
-                    <img
-                        src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGIwZHIxNnBwbHh5ZWF4cm45czh6ZGd6Znd6cm56Z3I4Z3I4Z3I4ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/LpDmM2wSt6Hm5fKJVa/giphy.gif"
-                        alt="Sending love"
-                        className="w-32 h-32 mx-auto mb-6"
-                    />
-                    <h2 className="text-4xl font-serif text-rose-600 mb-4">Sealing with a kiss...</h2>
-                    <p className="text-slate-500">Creating your permanent secret link.</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="min-h-screen bg-[#FFF0F5] text-slate-800 font-sans selection:bg-rose-200 selection:text-rose-900 pb-32">
-
+        <div className="min-h-screen bg-[#FFF0F5] text-slate-800 font-sans selection:bg-rose-200 selection:text-rose-900 pb-40">
             <FloatingHearts />
 
-            {/* --- NAVBAR (Light) --- */}
+            {/* --- NAVBAR --- */}
             <nav className="fixed w-full z-50 top-0 bg-white/80 backdrop-blur-md border-b border-rose-100 shadow-sm">
-                <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+                <div className="max-w-6xl mx-auto px-6 h-16 md:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate("/")}>
                         <span className="text-2xl group-hover:scale-110 transition-transform">💌</span>
                         <span className="font-serif text-xl font-bold tracking-tight text-slate-800">
@@ -154,18 +132,18 @@ export default function Preview() {
                 </div>
             </nav>
 
-            {/* Main Content */}
+            {/* --- MAIN CONTENT --- */}
             <div className="relative z-10 max-w-5xl mx-auto px-6 pt-32">
 
-                {/* HEADER SECTION */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-16">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
                     <div>
                         <div className="inline-block px-4 py-1.5 rounded-full bg-white border border-rose-200 text-rose-500 text-xs font-bold tracking-widest uppercase mb-6 shadow-sm">
-                            Final Preview
+                            {isPublished ? "Published & Live" : "Final Preview"}
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-serif text-slate-900 leading-[1.1]">
+                        <h1 className="text-4xl md:text-6xl font-serif text-slate-900 leading-[1.1]">
                             Ready to send to <br/>
-                            <span className="text-rose-500 italic relative">
+                            <span className="text-rose-500 italic relative inline-block">
                                 {data.partner?.name || "Partner"}?
                                 <svg className="absolute -bottom-2 left-0 w-full h-3 text-rose-300 opacity-50" viewBox="0 0 100 10" preserveAspectRatio="none">
                                     <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -173,88 +151,64 @@ export default function Preview() {
                             </span>
                         </h1>
                     </div>
-
-                    {/* Cute GIF Sticker */}
-                    <div className="hidden md:block">
+                    {/* Sticker */}
+                    <div className="hidden md:block animate-float">
                         <img
                             src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYWEzb3VxamgzODN0aWNzNjY0YzE4ZXM2bWw2dnNpZXpzcTBuZTlzbSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KjvlWLTmKqAww/giphy.gif"
                             alt="Love letter"
-                            className="w-32 h-32 opacity-90 hover:scale-110 transition-transform duration-500"
+                            className="w-32 h-32 opacity-90"
                         />
                     </div>
                 </div>
 
-                {/* CHAPTER CARDS (Paper Look) */}
-                <div className="grid md:grid-cols-2 gap-8">
+                {/* Content Cards */}
+                <div className="grid md:grid-cols-2 gap-6 md:gap-8">
                     {creatorChapters.map((chapter, i) => (
-                        <div
-                            key={chapter.id}
-                            className={`
-                                relative bg-white rounded-3xl p-8 md:p-10 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-rose-50 hover:shadow-[0_20px_40px_-15px_rgba(255,182,193,0.4)] transition-all duration-300
-                                ${i === creatorChapters.length - 1 ? 'md:col-span-2' : ''}
-                            `}
-                        >
-                            {/* Decorative Tape */}
+                        <div key={chapter.id} className={`relative bg-white rounded-3xl p-8 shadow-sm border border-rose-50 hover:shadow-md transition-all duration-300 ${i === creatorChapters.length - 1 ? 'md:col-span-2' : ''}`}>
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-rose-100/50 rotate-[-2deg] backdrop-blur-sm"></div>
 
-                            <h2 className="text-xs font-bold text-rose-400 uppercase tracking-widest mb-8 flex items-center gap-3">
-                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-rose-100 text-rose-500 text-[10px]">
-                                    {i + 1}
-                                </span>
+                            <h2 className="text-xs font-bold text-rose-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-rose-100 text-rose-500 text-[10px]">{i + 1}</span>
                                 {chapter.title}
                             </h2>
 
-                            <div className="space-y-12">
+                            <div className="space-y-8">
                                 {chapter.questions.map((q) => {
-                                    // Logic to read nested data
                                     const path = q.field.split(".");
                                     let value = data;
                                     for (let key of path) value = value?.[key];
 
                                     return (
                                         <div key={q.field} className="group">
-                                            <p className="text-xs text-slate-400 mb-3 font-medium uppercase tracking-wide">{q.label}</p>
+                                            <p className="text-[10px] md:text-xs text-slate-400 mb-2 font-bold uppercase tracking-wide">{q.label}</p>
 
                                             {editingField === q.field ? (
-                                                <div className="space-y-4 bg-rose-50/50 p-4 rounded-xl">
-                                                  <textarea
-                                                      value={tempValue}
-                                                      onChange={(e) => setTempValue(e.target.value)}
-                                                      rows={3}
-                                                      className="w-full bg-white border border-rose-200 rounded-xl px-4 py-3 text-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-400 resize-none shadow-inner"
-                                                      autoFocus
-                                                  />
-
-                                                    <div className="flex gap-3">
-                                                        <button
-                                                            onClick={() => saveEdit(q.field)}
-                                                            className="px-5 py-2 rounded-full bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 transition shadow-lg shadow-rose-200"
-                                                        >
-                                                            {saving ? "Saving..." : "Save Changes"}
-                                                        </button>
-                                                        <button
-                                                            onClick={cancelEdit}
-                                                            className="px-5 py-2 rounded-full bg-white text-slate-500 border border-slate-200 text-sm font-medium hover:bg-slate-50 transition"
-                                                        >
-                                                            Cancel
-                                                        </button>
+                                                <div className="bg-rose-50 p-3 rounded-xl animate-in fade-in zoom-in duration-200">
+                                                    <textarea
+                                                        value={tempValue}
+                                                        onChange={(e) => setTempValue(e.target.value)}
+                                                        rows={3}
+                                                        className="w-full bg-white border border-rose-200 rounded-lg p-3 text-base text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-400 resize-none"
+                                                        autoFocus
+                                                    />
+                                                    <div className="flex gap-2 mt-3 justify-end">
+                                                        <button onClick={() => setEditingField(null)} className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:bg-white transition">Cancel</button>
+                                                        <button onClick={() => saveEdit(q.field)} className="px-4 py-1.5 rounded-lg bg-rose-500 text-white text-xs font-bold shadow-md hover:bg-rose-600 transition">{saving ? "..." : "Save"}</button>
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="flex items-start justify-between gap-6">
-                                                    <div className="flex-1">
-                                                        <p className={`font-serif text-slate-800 leading-relaxed ${value?.length > 50 ? 'text-lg' : 'text-xl'}`}>
-                                                            {value || <span className="text-slate-300 italic">Not answered yet...</span>}
-                                                        </p>
-                                                    </div>
-
-                                                    <button
-                                                        onClick={() => startEdit(q.field, value)}
-                                                        className="opacity-0 group-hover:opacity-100 transition-all p-2 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-400 hover:text-rose-600 hover:scale-110"
-                                                        title="Edit this answer"
-                                                    >
-                                                        <EditIcon className="w-4 h-4" />
-                                                    </button>
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <p className="font-serif text-lg md:text-xl text-slate-800 leading-relaxed">
+                                                        {value || <span className="text-slate-300 italic text-sm">Not answered</span>}
+                                                    </p>
+                                                    {!isPublished && (
+                                                        <button
+                                                            onClick={() => startEdit(q.field, value)}
+                                                            className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-all"
+                                                        >
+                                                            <EditIcon className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -264,29 +218,104 @@ export default function Preview() {
                         </div>
                     ))}
                 </div>
+
+                {/* --- MEMORIES PREVIEW SECTION (NEW) --- */}
+                {data.memories && data.memories.length > 0 && (
+                    <div className="mt-8 bg-white rounded-3xl p-8 shadow-sm border border-rose-50 relative">
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-rose-100/50 rotate-[2deg] backdrop-blur-sm"></div>
+                        <h2 className="text-xs font-bold text-rose-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-rose-100 text-rose-500 text-[10px]">5</span>
+                            The Memories
+                        </h2>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {data.memories.map((url, index) => (
+                                <div key={index} className="aspect-square rounded-xl overflow-hidden border border-rose-100 shadow-sm relative group transform hover:scale-105 transition-all">
+                                    <img src={url} alt={`Memory ${index}`} className="w-full h-full object-cover" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
             </div>
 
-            {/* --- FLOATING ACTION BAR (Light) --- */}
-            <div className="fixed bottom-0 left-0 w-full z-40">
-                <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-white via-white/90 to-transparent pointer-events-none" />
+            {/* --- BOTTOM ACTION BAR --- */}
+            <div className="fixed bottom-0 left-0 w-full z-50">
+                {/* Gradient fade for content underneath */}
+                <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#FFF0F5] via-[#FFF0F5]/90 to-transparent pointer-events-none" />
 
-                <div className="relative max-w-4xl mx-auto px-6 pb-10 flex items-center justify-center md:justify-end gap-6">
-                    <div className="hidden md:block text-right">
-                        <p className="text-slate-800 font-bold">Ready to send?</p>
-                        <p className="text-slate-400 text-xs">Create your secret link now</p>
+                <div className="relative bg-white border-t border-rose-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-3xl p-6 md:p-8 max-w-2xl mx-auto mb-0 md:mb-6 md:rounded-3xl md:shadow-2xl md:border transition-all duration-500">
+
+                    {!isPublished ? (
+                        // STATE 1: PRE-PUBLISH
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="hidden md:block">
+                                <p className="font-bold text-slate-800">Everything looks good?</p>
+                                <p className="text-xs text-slate-400">Once published, you can share it.</p>
+                            </div>
+                            <button
+                                onClick={handlePublish}
+                                disabled={publishing}
+                                className="w-full md:w-auto px-8 py-4 bg-slate-900 text-white rounded-xl font-bold text-lg hover:bg-slate-800 hover:-translate-y-1 transition-all shadow-lg flex items-center justify-center gap-2"
+                            >
+                                {publishing ? (
+                                    <span className="animate-pulse">Saving...</span>
+                                ) : (
+                                    <>
+                                        <span>Publish Story</span>
+                                        <span>🚀</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    ) : (
+                        // STATE 2: POST-PUBLISH (SHARE OPTIONS)
+                        <div className="animate-in slide-in-from-bottom duration-500">
+                            <h3 className="text-center text-slate-800 font-bold mb-4 flex items-center justify-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/>
+                                Ready to Share! Choose a style:
+                            </h3>
+
+                            <div className="bg-slate-100 p-1 rounded-xl flex gap-1 mb-6">
+                                <button
+                                    onClick={() => setActiveTab("direct")}
+                                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === "direct" ? "bg-white shadow text-rose-500" : "text-slate-400 hover:text-slate-600"}`}
+                                >
+                                    Open Now 💌
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab("wait")}
+                                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === "wait" ? "bg-white shadow text-rose-500" : "text-slate-400 hover:text-slate-600"}`}
+                                >
+                                    Countdown ⏳
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => copyLink(activeTab)}
+                                className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2
+                                    ${activeTab === 'direct' ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : 'bg-slate-800 hover:bg-slate-900 shadow-slate-300'}
+                                `}
+                            >
+                                <span>{activeTab === 'direct' ? "Copy Direct Link" : "Copy Timer Link"}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                                </svg>
+                            </button>
+
+                            <p className="text-center text-xs text-slate-400 mt-3 font-medium">
+                                {activeTab === 'wait' ? "Link stays locked until Feb 14th." : "Link opens immediately."}
+                            </p>
+                        </div>
+                    )}
+                    <div className="mt-6 pt-4 border-t border-slate-100 text-center">
+                        <p className="text-[10px] text-slate-400 leading-relaxed max-w-sm mx-auto">
+                            <span className="font-bold text-slate-500">🔒 Privacy Notice:</span> Don't worry! Your images are
+                            not permanently stored. A backend script automatically deletes them from our database after the
+                            link is generated to ensure your privacy.
+                        </p>
                     </div>
-
-                    <button
-                        onClick={handlePublish}
-                        disabled={publishing}
-                        className="group relative px-10 py-4 bg-slate-900 rounded-full text-white font-bold tracking-wide shadow-[0_10px_30px_-10px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
-                    >
-                        <span className="absolute inset-0 bg-gradient-to-r from-rose-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                        <span className="relative flex items-center gap-3">
-                            <span>Publish Story</span>
-                            <span className="text-xl group-hover:animate-bounce">💌</span>
-                        </span>
-                    </button>
                 </div>
             </div>
 
