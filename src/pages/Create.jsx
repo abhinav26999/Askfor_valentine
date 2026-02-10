@@ -4,6 +4,7 @@ import {
     createLovePage,
     updateLovePage,
     getLovePage,
+    uploadMemoryImage // Ensure this is exported from your loveService.js
 } from "../firebase/loveService";
 import { creatorChapters } from "../data/creatorChapters";
 
@@ -17,18 +18,14 @@ const allQuestions = creatorChapters.flatMap((chapter) =>
     }))
 );
 
-// --- NEW CUTE GIFS (High Reliability) ---
+// --- NEW CUTE GIFS ---
 const GIFS = {
-    // Cute waving bear for start
     start: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNnZ4YXBoZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/LHZyixOnHwDDy/giphy.gif",
-    // Writing/Thinking cat for middle
     mid: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/l4KibWpBGWchSqCRy/giphy.gif",
-    // Hearts explosion for high progress
     high: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/26BRv0ThflsHCqDrG/giphy.gif",
-    // Calculating computer
     calculating: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/3o7TKr3nzbh5WgCFxe/giphy.gif",
-    // Final Celebration
-    end: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/TdfyKrN7HGTIY/giphy.gif"
+    end: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/TdfyKrN7HGTIY/giphy.gif",
+    camera: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHQ4eW54cnl5eHZ4bnZ4bnZ4bnZ4bnZ4bnZ4bnZ4bnZ4bnZ4ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/3o7TKr3nzbh5WgCFxe/giphy.gif" // Reusing calc for upload loader or generic
 };
 
 // --- ANIMATION STYLES ---
@@ -59,8 +56,14 @@ export default function Create() {
     const [isSaving, setIsSaving] = useState(false);
     const [calculatingLove, setCalculatingLove] = useState(false);
 
-    const inputRef = useRef(null);
+    // --- MEMORY UPLOAD STATES ---
+    const [memories, setMemories] = useState([]);
+    const [uploadingImg, setUploadingImg] = useState(false);
 
+    const inputRef = useRef(null);
+    const fileInputRef = useRef(null);
+
+    // Focus input logic
     useEffect(() => {
         if (!loading && !calculatingLove && inputRef.current) {
             inputRef.current.focus();
@@ -75,12 +78,16 @@ export default function Create() {
                     const existing = await getLovePage(id);
                     if (existing && existing.status === "draft") {
                         setDocId(id);
+                        if (existing.memories) setMemories(existing.memories); // Load memories if any
+
                         const index = allQuestions.findIndex((q) => {
                             const path = q.field.split(".");
                             let value = existing;
                             for (let key of path) value = value?.[key];
                             return !value;
                         });
+
+                        // If all questions answered, check if we are in upload phase
                         setCurrentIndex(index === -1 ? allQuestions.length : index);
                         setLoading(false);
                         return;
@@ -93,6 +100,7 @@ export default function Create() {
                 creator: { name: "" },
                 partner: { name: "", nickname: "" },
                 answers: { realization: "", memory: "", smallThing: "", secret: "", admiration: "", fear: "", promise: "", chooseAgain: "", finalLine: "" },
+                memories: []
             });
             localStorage.setItem(DRAFT_KEY, newId);
             setDocId(newId);
@@ -103,20 +111,27 @@ export default function Create() {
     }, []);
 
     const handleNext = async () => {
-        if (!answer.trim()) return;
-        setIsSaving(true);
-        await updateLovePage(docId, { [allQuestions[currentIndex].field]: answer });
-        setIsSaving(false);
+        // If we are in the question phase
+        if (currentIndex < allQuestions.length) {
+            if (!answer.trim()) return;
+            setIsSaving(true);
+            await updateLovePage(docId, { [allQuestions[currentIndex].field]: answer });
+            setIsSaving(false);
 
-        if (currentIndex === allQuestions.length - 1) {
-            setCalculatingLove(true);
-            setTimeout(() => {
+            // If this was the last question, trigger calculation then move to upload
+            if (currentIndex === allQuestions.length - 1) {
+                setCalculatingLove(true);
+                setTimeout(() => {
+                    setAnswer("");
+                    setCurrentIndex((prev) => prev + 1); // Move to Upload Index (Length)
+                    setCalculatingLove(false);
+                }, 3500);
+            } else {
                 setAnswer("");
                 setCurrentIndex((prev) => prev + 1);
-                setCalculatingLove(false);
-            }, 3500);
+            }
         } else {
-            setAnswer("");
+            // We are in Upload Phase, moving to Final Preview
             setCurrentIndex((prev) => prev + 1);
         }
     };
@@ -128,6 +143,28 @@ export default function Create() {
         }
     };
 
+    // --- FILE UPLOAD HANDLER ---
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploadingImg(true);
+        try {
+            // Upload to Firebase Storage
+            const url = await uploadMemoryImage(file, docId);
+            const newMemories = [...memories, url];
+
+            // Save URL to Firestore
+            setMemories(newMemories);
+            await updateLovePage(docId, { memories: newMemories });
+        } catch (error) {
+            console.error("Upload failed", error);
+            alert("Could not upload image. Try a smaller file!");
+        }
+        setUploadingImg(false);
+    };
+
+    // --- LOADING SCREEN ---
     if (loading) {
         return (
             <div className="min-h-screen bg-pink-50 flex flex-col items-center justify-center text-rose-400 gap-4">
@@ -137,10 +174,10 @@ export default function Create() {
         );
     }
 
+    // --- CALCULATING SCREEN ---
     if (calculatingLove) {
         return (
             <div className="min-h-screen bg-rose-50 flex flex-col items-center justify-center text-center px-6 animate-pop-in">
-                {/* Changed GIF to a reliable calculating one */}
                 <img src={GIFS.calculating} alt="Calculating" className="w-48 h-48 mb-6 rounded-full shadow-xl border-4 border-white object-cover bg-rose-100" />
                 <h2 className="text-3xl font-bold text-rose-600 mb-2">Analyzing Chemistry...</h2>
                 <p className="text-slate-500">Compiling your cute answers...</p>
@@ -152,7 +189,63 @@ export default function Create() {
         );
     }
 
-    if (currentIndex >= allQuestions.length) {
+    // --- UPLOAD MEMORIES SCREEN (New Section) ---
+    if (currentIndex === allQuestions.length) {
+        return (
+            <div className="min-h-screen bg-[#FFF0F5] text-slate-800 font-sans flex flex-col items-center justify-center px-6 animate-pop-in">
+                <div className="w-full max-w-lg bg-white rounded-3xl p-8 md:p-12 shadow-[0_20px_50px_-20px_rgba(255,182,193,0.6)] border border-rose-50 relative text-center">
+
+                    <div className="absolute -top-10 left-1/2 -translate-x-1/2 text-6xl animate-bounce">📸</div>
+
+                    <h2 className="text-3xl font-black text-slate-800 mb-2 mt-4">One Last Thing!</h2>
+                    <p className="text-slate-500 mb-8">Add photos for the Memory Gallery. (Optional)</p>
+
+                    {/* Image Grid */}
+                    <div className="grid grid-cols-3 gap-3 mb-8">
+                        {memories.map((url, i) => (
+                            <div key={i} className="aspect-square rounded-xl overflow-hidden border-2 border-rose-100 shadow-sm relative group">
+                                <img src={url} className="w-full h-full object-cover" alt="Memory" />
+                            </div>
+                        ))}
+
+                        {/* Add Button */}
+                        <button
+                            onClick={() => fileInputRef.current.click()}
+                            disabled={uploadingImg}
+                            className="aspect-square rounded-xl border-2 border-dashed border-rose-300 flex flex-col items-center justify-center text-rose-400 hover:bg-rose-50 transition cursor-pointer"
+                        >
+                            {uploadingImg ? (
+                                <div className="animate-spin w-5 h-5 border-2 border-rose-400 border-t-transparent rounded-full"/>
+                            ) : (
+                                <>
+                                    <span className="text-2xl font-bold">+</span>
+                                    <span className="text-[10px] uppercase font-bold mt-1">Add</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className="hidden"
+                        accept="image/*"
+                    />
+
+                    <button
+                        onClick={handleNext}
+                        className="w-full py-4 bg-rose-500 text-white rounded-xl font-bold text-lg hover:bg-rose-600 hover:-translate-y-1 shadow-lg shadow-rose-200 transition-all"
+                    >
+                        {memories.length > 0 ? "Finish & Preview ✨" : "Skip & Preview 👉"}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // --- FINAL COMPLETED SCREEN ---
+    if (currentIndex > allQuestions.length) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-pink-100 to-rose-100 flex flex-col items-center justify-center text-center px-6 animate-pop-in">
                 <div className="relative">
@@ -175,6 +268,7 @@ export default function Create() {
         );
     }
 
+    // --- STANDARD QUESTION SCREEN (Unchanged UI) ---
     const current = allQuestions[currentIndex];
     const progressPercent = ((currentIndex + 1) / allQuestions.length) * 100;
 
@@ -276,7 +370,7 @@ export default function Create() {
                             }
                             `}
                         >
-                            {isSaving ? "Saving..." : currentIndex === allQuestions.length - 1 ? "Finish! 🎉" : "Next Question 👉"}
+                            {isSaving ? "Saving..." : currentIndex === allQuestions.length - 1 ? "Calculate! 💘" : "Next Question 👉"}
                         </button>
 
                         <div className="text-center mt-4">

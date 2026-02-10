@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { getStoryCount } from "../firebase/loveService"; // Import the function
 // --- ICONS ---
 const HeartIcon = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -51,10 +51,12 @@ const styles = `
 export default function Landing() {
     const navigate = useNavigate();
     const [scrolled, setScrolled] = useState(false);
+    const [count, setCount] = useState(0); // State for counter
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 50);
         window.addEventListener("scroll", handleScroll);
+        getStoryCount().then(val => setCount(val));
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
@@ -99,7 +101,16 @@ export default function Landing() {
 
                 {/* --- HERO SECTION --- */}
                 <section className="min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20">
-
+                    {/* --- NEW: LIVE COUNTER BADGE --- */}
+                    <div className="mb-8 flex items-center gap-3 px-4 py-2 bg-slate-800/50 backdrop-blur-md border border-rose-500/30 rounded-full animate-fade-in-up">
+                        <span className="relative flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                        </span>
+                        <span className="text-xs font-mono text-rose-200 tracking-widest">
+                            {count > 0 ? count.toLocaleString() : "..."} LOVERS JOINED
+                        </span>
+                    </div>
                     {/* Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-rose-300 text-sm mb-8 animate-fade-in-up backdrop-blur-sm">
                         <SparkleIcon className="w-4 h-4 text-yellow-300" />
