@@ -114,7 +114,8 @@ export default function Preview() {
     if (!data) return <div className="min-h-screen bg-pink-50 flex items-center justify-center text-slate-500">Story not found.</div>;
 
     return (
-        <div className="min-h-screen bg-[#FFF0F5] text-slate-800 font-sans selection:bg-rose-200 selection:text-rose-900 pb-40">
+        // FIXED: Increased padding-bottom (pb-96) so content doesn't get hidden behind the taller bottom bar
+        <div className="min-h-screen bg-[#FFF0F5] text-slate-800 font-sans selection:bg-rose-200 selection:text-rose-900 pb-96">
             <FloatingHearts />
 
             <nav className="fixed w-full z-50 top-0 bg-white/80 backdrop-blur-md border-b border-rose-100 shadow-sm">
@@ -211,6 +212,7 @@ export default function Preview() {
                     ))}
                 </div>
 
+                {/* --- MEMORIES PREVIEW SECTION --- */}
                 {data.memories && data.memories.length > 0 && (
                     <div className="mt-8 bg-white rounded-3xl p-8 shadow-sm border border-rose-50 relative">
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-rose-100/50 rotate-[2deg] backdrop-blur-sm"></div>
@@ -231,8 +233,10 @@ export default function Preview() {
 
             </div>
 
+            {/* --- FIXED BOTTOM BAR --- */}
             <div className="fixed bottom-0 left-0 w-full z-50">
-                <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#FFF0F5] via-[#FFF0F5]/90 to-transparent pointer-events-none" />
+                {/* Gradient fade for content underneath */}
+                <div className="absolute bottom-0 inset-x-0 h-64 bg-gradient-to-t from-[#FFF0F5] via-[#FFF0F5]/95 to-transparent pointer-events-none" />
 
                 <div className="relative bg-white border-t border-rose-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-3xl p-6 md:p-8 max-w-2xl mx-auto mb-0 md:mb-6 md:rounded-3xl md:shadow-2xl md:border transition-all duration-500">
 
