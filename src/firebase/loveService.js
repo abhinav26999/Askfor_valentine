@@ -9,12 +9,9 @@ import {
     getCountFromServer,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-// Collection reference
 const loveCollection = collection(db, "lovePages");
 
-/**
- * Create a new love page (DRAFT)
- */
+
 export const createLovePage = async (data) => {
     const docRef = await addDoc(loveCollection, {
         ...data,
@@ -26,9 +23,7 @@ export const createLovePage = async (data) => {
     return docRef.id;
 };
 
-/**
- * Fetch a love page by ID
- */
+
 export const getLovePage = async (id) => {
     const ref = doc(db, "lovePages", id);
     const snap = await getDoc(ref);
@@ -37,9 +32,7 @@ export const getLovePage = async (id) => {
     return snap.data();
 };
 
-/**
- * Publish a love page (make it public)
- */
+
 export const publishLovePage = async (id) => {
     const ref = doc(db, "lovePages", id);
 
@@ -59,9 +52,7 @@ export const updateLovePage = async (id, data) => {
     });
 };
 
-/**
- * Upload an image to Firebase Storage
- */
+
 export const uploadMemoryImage = async (file, pageId) => {
     const storageRef = ref(storage, `memories/${pageId}/${Date.now()}_${file.name}`);
     const snapshot = await uploadBytes(storageRef, file);
@@ -69,14 +60,12 @@ export const uploadMemoryImage = async (file, pageId) => {
     return downloadURL;
 };
 
-/**
- * Get Total Created Stories Count
- */
+
 export const getStoryCount = async () => {
     try {
         const snapshot = await getCountFromServer(loveCollection);
         return snapshot.data().count;
     } catch (error) {
-        return 1240; // Fallback fake number if offline
+        return 1240;
     }
 };

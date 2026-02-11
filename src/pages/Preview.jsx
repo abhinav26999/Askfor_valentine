@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { getLovePage, publishLovePage, updateLovePage } from "../firebase/loveService";
 import { creatorChapters } from "../data/creatorChapters";
 
-// --- ICONS ---
 const EditIcon = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -12,7 +11,6 @@ const EditIcon = ({ className }) => (
 
 const DRAFT_KEY = "love_draft_id";
 
-// --- FLOATING HEARTS BACKGROUND ---
 const FloatingHearts = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
@@ -46,12 +44,11 @@ export default function Preview() {
     const [loading, setLoading] = useState(true);
     const [publishing, setPublishing] = useState(false);
 
-    // UI States
     const [editingField, setEditingField] = useState(null);
     const [tempValue, setTempValue] = useState("");
     const [saving, setSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState("direct"); // "direct" or "wait"
-    const [isPublished, setIsPublished] = useState(false); // Track if published to show link options
+    const [activeTab, setActiveTab] = useState("direct");
+    const [isPublished, setIsPublished] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -120,7 +117,6 @@ export default function Preview() {
         <div className="min-h-screen bg-[#FFF0F5] text-slate-800 font-sans selection:bg-rose-200 selection:text-rose-900 pb-40">
             <FloatingHearts />
 
-            {/* --- NAVBAR --- */}
             <nav className="fixed w-full z-50 top-0 bg-white/80 backdrop-blur-md border-b border-rose-100 shadow-sm">
                 <div className="max-w-6xl mx-auto px-6 h-16 md:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-2 group cursor-pointer" onClick={() => navigate("/")}>
@@ -132,10 +128,8 @@ export default function Preview() {
                 </div>
             </nav>
 
-            {/* --- MAIN CONTENT --- */}
             <div className="relative z-10 max-w-5xl mx-auto px-6 pt-32">
 
-                {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
                     <div>
                         <div className="inline-block px-4 py-1.5 rounded-full bg-white border border-rose-200 text-rose-500 text-xs font-bold tracking-widest uppercase mb-6 shadow-sm">
@@ -151,7 +145,6 @@ export default function Preview() {
                             </span>
                         </h1>
                     </div>
-                    {/* Sticker */}
                     <div className="hidden md:block animate-float">
                         <img
                             src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExYWEzb3VxamgzODN0aWNzNjY0YzE4ZXM2bWw2dnNpZXpzcTBuZTlzbSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KjvlWLTmKqAww/giphy.gif"
@@ -161,7 +154,6 @@ export default function Preview() {
                     </div>
                 </div>
 
-                {/* Content Cards */}
                 <div className="grid md:grid-cols-2 gap-6 md:gap-8">
                     {creatorChapters.map((chapter, i) => (
                         <div key={chapter.id} className={`relative bg-white rounded-3xl p-8 shadow-sm border border-rose-50 hover:shadow-md transition-all duration-300 ${i === creatorChapters.length - 1 ? 'md:col-span-2' : ''}`}>
@@ -219,7 +211,6 @@ export default function Preview() {
                     ))}
                 </div>
 
-                {/* --- MEMORIES PREVIEW SECTION (NEW) --- */}
                 {data.memories && data.memories.length > 0 && (
                     <div className="mt-8 bg-white rounded-3xl p-8 shadow-sm border border-rose-50 relative">
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-rose-100/50 rotate-[2deg] backdrop-blur-sm"></div>
@@ -240,15 +231,12 @@ export default function Preview() {
 
             </div>
 
-            {/* --- BOTTOM ACTION BAR --- */}
             <div className="fixed bottom-0 left-0 w-full z-50">
-                {/* Gradient fade for content underneath */}
                 <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-[#FFF0F5] via-[#FFF0F5]/90 to-transparent pointer-events-none" />
 
                 <div className="relative bg-white border-t border-rose-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] rounded-t-3xl p-6 md:p-8 max-w-2xl mx-auto mb-0 md:mb-6 md:rounded-3xl md:shadow-2xl md:border transition-all duration-500">
 
                     {!isPublished ? (
-                        // STATE 1: PRE-PUBLISH
                         <div className="flex items-center justify-between gap-4">
                             <div className="hidden md:block">
                                 <p className="font-bold text-slate-800">Everything looks good?</p>
@@ -270,7 +258,6 @@ export default function Preview() {
                             </button>
                         </div>
                     ) : (
-                        // STATE 2: POST-PUBLISH (SHARE OPTIONS)
                         <div className="animate-in slide-in-from-bottom duration-500">
                             <h3 className="text-center text-slate-800 font-bold mb-4 flex items-center justify-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/>

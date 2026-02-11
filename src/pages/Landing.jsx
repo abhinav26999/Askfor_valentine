@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getStoryCount } from "../firebase/loveService";
 
-// --- ICONS (Themed for Soft Aesthetic) ---
 const HeartIcon = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
         <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
@@ -15,7 +14,6 @@ const SparkleIcon = ({ className }) => (
     </svg>
 );
 
-// --- FLOATING HEARTS BACKGROUND (Identical to Preview) ---
 const FloatingHearts = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(8)].map((_, i) => (
@@ -77,9 +75,7 @@ export default function Landing() {
 
             <div className="relative z-10">
 
-                {/* --- HERO SECTION --- */}
                 <section className="min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20">
-                    {/* LIVE COUNTER BADGE */}
                     <div className="mb-8 flex items-center gap-3 px-4 py-2 bg-white/60 backdrop-blur-md border border-rose-200 rounded-full animate-fade-in-up shadow-sm">
                         <span className="relative flex h-3 w-3">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
@@ -90,13 +86,11 @@ export default function Landing() {
                         </span>
                     </div>
 
-                    {/* Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-100/50 border border-rose-200 text-rose-600 text-sm mb-8 animate-fade-in-up backdrop-blur-sm">
                         <SparkleIcon className="w-4 h-4" />
                         <span className="font-medium tracking-wide italic">The new way to say "I Love You"</span>
                     </div>
 
-                    {/* Headline */}
                     <h1 className="max-w-5xl mx-auto font-serif text-5xl md:text-7xl lg:text-8xl font-medium leading-[1.1] tracking-tight text-slate-900 mb-8 animate-fade-in-up">
                         Turn your feelings into a <br />
                         <span className="text-rose-500 italic relative inline-block">
@@ -112,7 +106,6 @@ export default function Landing() {
                         Personal, aesthetic, and unforgettable.
                     </p>
 
-                    {/* Buttons */}
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-fade-in-up">
                         <button
                             onClick={() => navigate("/create")}
@@ -125,7 +118,6 @@ export default function Landing() {
                     </div>
                 </section>
 
-                {/* --- FEATURES GRID --- */}
                 <section className="py-32 px-6">
                     <div className="max-w-6xl mx-auto">
                         <h2 className="text-3xl md:text-4xl font-serif text-center mb-16 text-slate-900">Why a digital love letter?</h2>
@@ -158,7 +150,6 @@ export default function Landing() {
                     </div>
                 </section>
 
-                {/* --- HOW IT WORKS (Horizontal Timeline) --- */}
                 <section className="py-32 bg-white/50 border-y border-rose-100">
                     <div className="max-w-7xl mx-auto px-6">
                         <div className="text-center mb-20">
@@ -167,7 +158,6 @@ export default function Landing() {
                         </div>
 
                         <div className="grid md:grid-cols-3 gap-12 relative">
-                            {/* Connecting Line (Desktop) */}
                             <div className="hidden md:block absolute top-12 left-0 w-full h-0.5 bg-rose-200"></div>
 
                             {[
@@ -187,7 +177,6 @@ export default function Landing() {
                     </div>
                 </section>
 
-                {/* --- BIG CTA --- */}
                 <section className="py-40 px-6 text-center relative overflow-hidden">
                     <div className="relative z-10 max-w-4xl mx-auto">
                         <h2 className="text-4xl md:text-6xl font-serif text-slate-900 mb-8 leading-tight">

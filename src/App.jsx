@@ -9,7 +9,6 @@ import Love from "./pages/Love";
 import Gallery from "./pages/Gallery.jsx";
 import Countdown from "./pages/Countdown.jsx";
 
-// Scroll to top on route change
 function ScrollToTop() {
     const { pathname } = useLocation();
     useEffect(() => {

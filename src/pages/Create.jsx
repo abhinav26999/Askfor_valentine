@@ -4,11 +4,10 @@ import {
     createLovePage,
     updateLovePage,
     getLovePage,
-    uploadMemoryImage // Ensure this is exported from your loveService.js
+    uploadMemoryImage
 } from "../firebase/loveService";
 import { creatorChapters } from "../data/creatorChapters";
 
-// --- CONFIG ---
 const DRAFT_KEY = "love_draft_id";
 const allQuestions = creatorChapters.flatMap((chapter) =>
     chapter.questions.map((q) => ({
@@ -18,7 +17,6 @@ const allQuestions = creatorChapters.flatMap((chapter) =>
     }))
 );
 
-// --- NEW CUTE GIFS ---
 const GIFS = {
     start: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNnZ4YXBoZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/LHZyixOnHwDDy/giphy.gif",
     mid: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdm9nZGtkcXdpZDV4YmloODMwdHRvdjlpcjA4cXF1ZW56YzFwMXZzeSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/52IISRYqpTcpdsP7Th/giphy.gif",
@@ -28,7 +26,6 @@ const GIFS = {
     camera: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHQ4eW54cnl5eHZ4bnZ4bnZ4bnZ4bnZ4bnZ4bnZ4bnZ4bnZ4ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/3o7TKr3nzbh5WgCFxe/giphy.gif" // Reusing calc for upload loader or generic
 };
 
-// --- ANIMATION STYLES ---
 const animationStyles = `
   @keyframes float {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
@@ -56,14 +53,12 @@ export default function Create() {
     const [isSaving, setIsSaving] = useState(false);
     const [calculatingLove, setCalculatingLove] = useState(false);
 
-    // --- MEMORY UPLOAD STATES ---
     const [memories, setMemories] = useState([]);
     const [uploadingImg, setUploadingImg] = useState(false);
 
     const inputRef = useRef(null);
     const fileInputRef = useRef(null);
 
-    // Focus input logic
     useEffect(() => {
         if (!loading && !calculatingLove && inputRef.current) {
             inputRef.current.focus();
@@ -78,7 +73,7 @@ export default function Create() {
                     const existing = await getLovePage(id);
                     if (existing && existing.status === "draft") {
                         setDocId(id);
-                        if (existing.memories) setMemories(existing.memories); // Load memories if any
+                        if (existing.memories) setMemories(existing.memories);
 
                         const index = allQuestions.findIndex((q) => {
                             const path = q.field.split(".");
@@ -87,7 +82,6 @@ export default function Create() {
                             return !value;
                         });
 
-                        // If all questions answered, check if we are in upload phase
                         setCurrentIndex(index === -1 ? allQuestions.length : index);
                         setLoading(false);
                         return;
@@ -118,12 +112,11 @@ export default function Create() {
             await updateLovePage(docId, { [allQuestions[currentIndex].field]: answer });
             setIsSaving(false);
 
-            // If this was the last question, trigger calculation then move to upload
             if (currentIndex === allQuestions.length - 1) {
                 setCalculatingLove(true);
                 setTimeout(() => {
                     setAnswer("");
-                    setCurrentIndex((prev) => prev + 1); // Move to Upload Index (Length)
+                    setCurrentIndex((prev) => prev + 1);
                     setCalculatingLove(false);
                 }, 3500);
             } else {
@@ -131,7 +124,6 @@ export default function Create() {
                 setCurrentIndex((prev) => prev + 1);
             }
         } else {
-            // We are in Upload Phase, moving to Final Preview
             setCurrentIndex((prev) => prev + 1);
         }
     };
@@ -143,18 +135,15 @@ export default function Create() {
         }
     };
 
-    // --- FILE UPLOAD HANDLER ---
     const handleFileChange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         setUploadingImg(true);
         try {
-            // Upload to Firebase Storage
             const url = await uploadMemoryImage(file, docId);
             const newMemories = [...memories, url];
 
-            // Save URL to Firestore
             setMemories(newMemories);
             await updateLovePage(docId, { memories: newMemories });
         } catch (error) {
@@ -164,7 +153,6 @@ export default function Create() {
         setUploadingImg(false);
     };
 
-    // --- LOADING SCREEN ---
     if (loading) {
         return (
             <div className="min-h-screen bg-pink-50 flex flex-col items-center justify-center text-rose-400 gap-4">
@@ -174,7 +162,6 @@ export default function Create() {
         );
     }
 
-    // --- CALCULATING SCREEN ---
     if (calculatingLove) {
         return (
             <div className="min-h-screen bg-rose-50 flex flex-col items-center justify-center text-center px-6 animate-pop-in">
@@ -189,7 +176,6 @@ export default function Create() {
         );
     }
 
-    // --- UPLOAD MEMORIES SCREEN (New Section) ---
     if (currentIndex === allQuestions.length) {
         return (
             <div className="min-h-screen bg-[#FFF0F5] text-slate-800 font-sans flex flex-col items-center justify-center px-6 animate-pop-in">
@@ -200,7 +186,6 @@ export default function Create() {
                     <h2 className="text-3xl font-black text-slate-800 mb-2 mt-4">One Last Thing!</h2>
                     <p className="text-slate-500 mb-8">Add photos for the Memory Gallery. (Optional)</p>
 
-                    {/* Image Grid */}
                     <div className="grid grid-cols-3 gap-3 mb-8">
                         {memories.map((url, i) => (
                             <div key={i} className="aspect-square rounded-xl overflow-hidden border-2 border-rose-100 shadow-sm relative group">
@@ -208,7 +193,6 @@ export default function Create() {
                             </div>
                         ))}
 
-                        {/* Add Button */}
                         <button
                             onClick={() => fileInputRef.current.click()}
                             disabled={uploadingImg}
@@ -251,13 +235,10 @@ export default function Create() {
         );
     }
 
-    // --- FINAL COMPLETED SCREEN ---
-// --- FINAL COMPLETED SCREEN (The Midnight Letter) ---
     if (currentIndex > allQuestions.length) {
         return (
             <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 relative overflow-hidden font-serif">
 
-                {/* --- AMBIENT GLOW --- */}
                 <div className="absolute inset-0 pointer-events-none">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse"></div>
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
@@ -265,13 +246,10 @@ export default function Create() {
 
                 <div className="relative z-10 w-full max-w-md flex flex-col items-center">
 
-                    {/* --- THE ENVELOPE VISUAL --- */}
                     <div className="relative w-72 h-48 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl transform rotate-[-2deg] hover:rotate-0 transition-transform duration-700 flex items-center justify-center mb-12 group">
 
-                        {/* Flap Shadow */}
                         <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/5 to-transparent z-10 clip-path-triangle"></div>
 
-                        {/* The Wax Seal (Button) */}
                         <button
                             onClick={() => navigate(`/preview/${docId}`)}
                             className="relative z-20 w-16 h-16 bg-gradient-to-br from-red-700 to-red-900 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.5)] group-hover:scale-110 transition-transform duration-300 border-4 border-[#2a2a2a]"
@@ -279,15 +257,12 @@ export default function Create() {
                             <div className="w-12 h-12 border-2 border-red-900/50 rounded-full flex items-center justify-center">
                                 <span className="text-xl filter drop-shadow-lg">❤️</span>
                             </div>
-                            {/* Pulse Effect */}
                             <div className="absolute inset-0 rounded-full border border-red-500/30 animate-ping"></div>
                         </button>
 
-                        {/* Letter Peek */}
                         <div className="absolute -top-6 w-[90%] h-12 bg-white rounded-t-md opacity-90 transform group-hover:-translate-y-4 transition-transform duration-500 shadow-lg"></div>
                     </div>
 
-                    {/* --- TEXT CONTENT --- */}
                     <div className="text-center space-y-6">
                         <h2 className="text-4xl md:text-5xl font-light text-white tracking-tight">
                             Signed, Sealed, <br/>
@@ -298,7 +273,6 @@ export default function Create() {
                             Your story has been encrypted and packaged into a private link.
                         </p>
 
-                        {/* --- ACTION BUTTON --- */}
                         <button
                             onClick={() => navigate(`/preview/${docId}`)}
                             className="group relative px-12 py-4 bg-transparent border border-white/20 rounded-full text-white font-sans text-sm font-bold tracking-[0.2em] hover:bg-white hover:text-black transition-all duration-300 mt-8"
@@ -312,11 +286,9 @@ export default function Create() {
             </div>
         );
     }
-    // --- STANDARD QUESTION SCREEN (Unchanged UI) ---
     const current = allQuestions[currentIndex];
     const progressPercent = ((currentIndex + 1) / allQuestions.length) * 100;
 
-    // Logic to switch GIFs
     let currentGif = GIFS.start;
     if (progressPercent > 30) currentGif = GIFS.mid;
     if (progressPercent > 70) currentGif = GIFS.high;
@@ -325,7 +297,6 @@ export default function Create() {
         <div className="min-h-screen bg-[#FFF0F5] text-slate-800 font-sans selection:bg-rose-200 selection:text-rose-900 overflow-hidden flex flex-col relative">
             <style>{animationStyles}</style>
 
-            {/* --- CUTE BACKGROUND ELEMENTS --- */}
             <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-50">
                 <div className="absolute top-10 left-10 text-4xl animate-float">💖</div>
                 <div className="absolute bottom-20 right-10 text-5xl animate-float" style={{animationDelay: '1s'}}>💌</div>
@@ -333,7 +304,6 @@ export default function Create() {
                 <div className="absolute top-20 right-1/3 text-2xl animate-float" style={{animationDelay: '3s'}}>✨</div>
             </div>
 
-            {/* --- TOP BAR --- */}
             <header className="relative z-20 w-full max-w-2xl mx-auto pt-8 px-6 flex items-center justify-between">
                 <button
                     onClick={() => navigate("/")}
@@ -351,10 +321,8 @@ export default function Create() {
                 </div>
             </header>
 
-            {/* --- MAIN CARD --- */}
             <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 max-w-2xl mx-auto w-full py-8">
 
-                {/* Progress Bar */}
                 <div className="w-full h-3 bg-white rounded-full mb-12 overflow-hidden shadow-inner border border-rose-100">
                     <div
                         className="h-full bg-gradient-to-r from-pink-400 to-rose-500 rounded-full transition-all duration-500 ease-out relative"
@@ -364,10 +332,8 @@ export default function Create() {
                     </div>
                 </div>
 
-                {/* Question Card */}
                 <div key={currentIndex} className="w-full bg-white rounded-3xl p-8 md:p-12 shadow-[0_20px_50px_-20px_rgba(255,182,193,0.6)] border border-rose-50 animate-pop-in relative mt-8">
 
-                    {/* Floating GIF Mascot - FIXED: Added bg color and reliable sizing */}
                     <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-28 h-28 bg-rose-50 rounded-full border-4 border-white shadow-lg flex items-center justify-center overflow-hidden z-20">
                         <img
                             src={currentGif}
@@ -385,7 +351,6 @@ export default function Create() {
                         </h2>
                     </div>
 
-                    {/* Input Area */}
                     <div className="relative group">
                         <textarea
                             ref={inputRef}
@@ -401,7 +366,6 @@ export default function Create() {
                         </div>
                     </div>
 
-                    {/* Action Bar */}
                     <div className="mt-8">
                         <button
                             onClick={handleNext}
