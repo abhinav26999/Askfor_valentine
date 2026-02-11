@@ -21,10 +21,10 @@ const allQuestions = creatorChapters.flatMap((chapter) =>
 // --- NEW CUTE GIFS ---
 const GIFS = {
     start: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNnZ4YXBoZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/LHZyixOnHwDDy/giphy.gif",
-    mid: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/l4KibWpBGWchSqCRy/giphy.gif",
-    high: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/26BRv0ThflsHCqDrG/giphy.gif",
-    calculating: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/3o7TKr3nzbh5WgCFxe/giphy.gif",
-    end: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5Z3V5Y3F5ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/TdfyKrN7HGTIY/giphy.gif",
+    mid: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdm9nZGtkcXdpZDV4YmloODMwdHRvdjlpcjA4cXF1ZW56YzFwMXZzeSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/52IISRYqpTcpdsP7Th/giphy.gif",
+    high: "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3ZmZoaGtla2h4ZDB3NDNqNW9pcThpbjI4aGR4dTl5bnltOHFxaHlkMSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/L2CGdCUzxnueBGE7vI/giphy.gif",
+    calculating: "https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3MThwYzVicjY0bjJzenBzc3o3M25xM2E2NDlxaDByZXRrdXVkbWxnMiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/qKQQUKSSbWBkO2V3KX/giphy.gif",
+    end: "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExeW9mN2kwZGpkbmt6b29wamlkaHA0aWhsb3Ntbm91dXVnbjZ3bnhvMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1wmOyZYoGzz003R03Y/giphy.gif",
     camera: "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExOHQ4eW54cnl5eHZ4bnZ4bnZ4bnZ4bnZ4bnZ4bnZ4bnZ4bnZ4ZyZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/3o7TKr3nzbh5WgCFxe/giphy.gif" // Reusing calc for upload loader or generic
 };
 
@@ -252,29 +252,66 @@ export default function Create() {
     }
 
     // --- FINAL COMPLETED SCREEN ---
+// --- FINAL COMPLETED SCREEN (The Midnight Letter) ---
     if (currentIndex > allQuestions.length) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-pink-100 to-rose-100 flex flex-col items-center justify-center text-center px-6 animate-pop-in">
-                <div className="relative">
-                    <div className="absolute -inset-4 bg-white/50 rounded-full blur-xl animate-pulse"></div>
-                    <img src={GIFS.end} alt="Done" className="relative w-40 h-40 mb-6 object-contain" />
+            <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 relative overflow-hidden font-serif">
+
+                {/* --- AMBIENT GLOW --- */}
+                <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-rose-900/20 rounded-full blur-[100px] animate-pulse"></div>
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30"></div>
                 </div>
 
-                <h2 className="text-4xl font-black text-rose-600 mb-2 drop-shadow-sm">Love Story Ready!</h2>
-                <p className="text-slate-600 mb-8 max-w-xs mx-auto leading-relaxed">
-                    We've packaged your feelings into something special.
-                </p>
+                <div className="relative z-10 w-full max-w-md flex flex-col items-center">
 
-                <button
-                    onClick={() => navigate(`/preview/${docId}`)}
-                    className="px-8 py-4 bg-white text-rose-600 rounded-full font-bold shadow-[0_10px_30px_-10px_rgba(255,182,193,1)] hover:shadow-[0_20px_40px_-10px_rgba(255,182,193,1)] hover:-translate-y-1 transition-all border-2 border-rose-100"
-                >
-                    Preview My Masterpiece 👉
-                </button>
+                    {/* --- THE ENVELOPE VISUAL --- */}
+                    <div className="relative w-72 h-48 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl transform rotate-[-2deg] hover:rotate-0 transition-transform duration-700 flex items-center justify-center mb-12 group">
+
+                        {/* Flap Shadow */}
+                        <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/5 to-transparent z-10 clip-path-triangle"></div>
+
+                        {/* The Wax Seal (Button) */}
+                        <button
+                            onClick={() => navigate(`/preview/${docId}`)}
+                            className="relative z-20 w-16 h-16 bg-gradient-to-br from-red-700 to-red-900 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.5)] group-hover:scale-110 transition-transform duration-300 border-4 border-[#2a2a2a]"
+                        >
+                            <div className="w-12 h-12 border-2 border-red-900/50 rounded-full flex items-center justify-center">
+                                <span className="text-xl filter drop-shadow-lg">❤️</span>
+                            </div>
+                            {/* Pulse Effect */}
+                            <div className="absolute inset-0 rounded-full border border-red-500/30 animate-ping"></div>
+                        </button>
+
+                        {/* Letter Peek */}
+                        <div className="absolute -top-6 w-[90%] h-12 bg-white rounded-t-md opacity-90 transform group-hover:-translate-y-4 transition-transform duration-500 shadow-lg"></div>
+                    </div>
+
+                    {/* --- TEXT CONTENT --- */}
+                    <div className="text-center space-y-6">
+                        <h2 className="text-4xl md:text-5xl font-light text-white tracking-tight">
+                            Signed, Sealed, <br/>
+                            <span className="text-rose-500 italic font-serif">Delivered.</span>
+                        </h2>
+
+                        <p className="text-white/40 text-sm tracking-widest uppercase font-sans max-w-xs mx-auto leading-relaxed">
+                            Your story has been encrypted and packaged into a private link.
+                        </p>
+
+                        {/* --- ACTION BUTTON --- */}
+                        <button
+                            onClick={() => navigate(`/preview/${docId}`)}
+                            className="group relative px-12 py-4 bg-transparent border border-white/20 rounded-full text-white font-sans text-sm font-bold tracking-[0.2em] hover:bg-white hover:text-black transition-all duration-300 mt-8"
+                        >
+                            <span className="relative z-10 group-hover:hidden">OPEN PREVIEW</span>
+                            <span className="relative z-10 hidden group-hover:inline">BREAK THE SEAL</span>
+                        </button>
+                    </div>
+
+                </div>
             </div>
         );
     }
-
     // --- STANDARD QUESTION SCREEN (Unchanged UI) ---
     const current = allQuestions[currentIndex];
     const progressPercent = ((currentIndex + 1) / allQuestions.length) * 100;
